@@ -3,23 +3,28 @@
 A Student Management System developed using C Programming and Raylib.
 
 ## Features
-- Add Student
-- Edit Student
-- Delete Student
-- Search Student
-- View Student Records
-- Marks and Result Management
-- File Handling
-- Interactive GUI Dashboard
+
+* Add Student
+* Edit Student
+* Delete Student
+* Search Student
 
 ## Technologies Used
-- C Programming
-- Raylib
-- VS Code
+
+* C Programming
+* Raylib
+* Visual Studio Code
+* GCC Compiler
 
 ## How to Run
-Compile the project using GCC with Raylib library linking.
+
+1. Clone or download this repository.
+2. Open the project folder in VS Code.
+3. Compile the C program using GCC and Raylib.
+4. Run the generated executable file.
 
 ## Developer
-Harish Jamal
+
+**Harish Jamal**
+
 B.Tech CSE Student
