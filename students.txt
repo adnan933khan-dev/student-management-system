@@ -1,0 +1,4 @@
+18700125022|harish jamal|b.tech|99.00
+18700125035|aman|btech|90.00
+18700125055|harish jamal|b.tech|90.00
+18700125023|xyz|law|67.00
