@@ -19,7 +19,7 @@ jobs:
           cd build/raylib/src
           emmake make PLATFORM=PLATFORM_WEB -B
           cd ../../..
-          emcc main.c build/raylib/src/libraylib.a -o index.html \
+          emcc main.c build/raylib/src/libraylib.web.a -o index.html \
             -Os -Wall -Ibuild/raylib/src \
             -s USE_GLFW=3 -s WASM=1 \
             --shell-file build/raylib/src/minshell.html \
