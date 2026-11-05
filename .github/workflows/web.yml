@@ -14,11 +14,19 @@ jobs:
         run: |
           mkdir -p build
           git clone --depth 1 https://github.com/raysan5/raylib.git build/raylib
+          
+          # Yeh line zaroori hai: Raylib ko web platform ke liye compile karna
+          cd build/raylib/src
+          make PLATFORM=PLATFORM_WEB -B
+          cd ../../..
+          
+          # Ab C code ko Emscripten se compile karenge
           emcc main.c build/raylib/src/libraylib.a -o index.html \
             -Os -Wall -Ibuild/raylib/src \
             -s USE_GLFW=3 -s WASM=1 \
             --shell-file build/raylib/src/minshell.html \
             -s ALLOW_MEMORY_GROWTH=1
+
       - name: Upload Web Files
         uses: actions/upload-artifact@v4
         with:
