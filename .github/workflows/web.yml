@@ -7,6 +7,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -25,11 +27,9 @@ jobs:
             --shell-file build/raylib/src/minshell.html \
             -s ALLOW_MEMORY_GROWTH=1
 
-      - name: Upload Web Files
-        uses: actions/upload-artifact@v4
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          name: web-version
-          path: |
-            index.html
-            index.js
-            index.wasm
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          include_hidden: true
