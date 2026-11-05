@@ -15,12 +15,11 @@ jobs:
           mkdir -p build
           git clone --depth 1 https://github.com/raysan5/raylib.git build/raylib
           
-          # Yeh line zaroori hai: Raylib ko web platform ke liye compile karna
+          # Yahan 'make' ki jagah 'emmake make' use karna zaroori hai
           cd build/raylib/src
-          make PLATFORM=PLATFORM_WEB -B
+          emmake make PLATFORM=PLATFORM_WEB -B
           cd ../../..
           
-          # Ab C code ko Emscripten se compile karenge
           emcc main.c build/raylib/src/libraylib.a -o index.html \
             -Os -Wall -Ibuild/raylib/src \
             -s USE_GLFW=3 -s WASM=1 \
