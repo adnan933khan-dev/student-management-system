@@ -1,0 +1,35 @@
+name: Build Web
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: mymindstorm/setup-emsdk@v14
+
+      - name: Compile to Web
+        run: |
+          mkdir -p build
+          git clone --depth 1 https://github.com/raysan5/raylib.git build/raylib
+          cd build/raylib/src
+          emmake make PLATFORM=PLATFORM_WEB -B
+          cd ../../..
+          emcc main.c build/raylib/src/libraylib.a -o index.html \
+            -Os -Wall -Ibuild/raylib/src \
+            -s USE_GLFW=3 -s WASM=1 \
+            --shell-file build/raylib/src/minshell.html \
+            -s ALLOW_MEMORY_GROWTH=1
+
+      - name: Upload Web Files
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-version
+          path: |
+            index.html
+            index.js
+            index.wasm
