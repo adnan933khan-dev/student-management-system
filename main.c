@@ -522,8 +522,6 @@ void DrawDashboard(void)
     int statusX = sw - statusWidth - 40;
     if (statusX < 40) statusX = 40;
     DrawText(statusMessage, statusX, sh - 35, 14, CUSTOM_GREEN);
-
-    if (showDeleteDialog)
     {
         DrawDeleteDialog();
     }
