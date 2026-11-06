@@ -483,13 +483,11 @@ int main(void)
         }
 
         BeginDrawing();
-        ClearBackground(CUSTOM_BG);
-        if (currentScreen == LIST) DrawDashboard();
-        else DrawForm();
-        EndDrawing();
-    }
+        ClearBackground(CUSTOM_BG)
+        if (currentScreen == LIST)
+        {
+            if (IsKeyPressed(KEY_DELETE)) {
+                OpenDeleteDialog();
+            }
 
-    SaveData();
-    CloseWindow();
-    return 0;
-}
+            if (IsKeyPressed(KEY_TAB) && selectedIndex >= 0)
