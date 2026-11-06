@@ -37,15 +37,15 @@ char statusMessage[100] = "Welcome! Manage your student records.";
 char formErrorMessage[100] = "";
 
 // Modern Dark Slate Palette
-Color CUSTOM_BG = {15, 23, 42, 255};      
-Color CUSTOM_PANEL = {30, 41, 59, 255};   
-Color CUSTOM_BLUE = {59, 130, 246, 255};  
+Color CUSTOM_BG = {15, 23, 42, 255};
+Color CUSTOM_PANEL = {30, 41, 59, 255};
+Color CUSTOM_BLUE = {59, 130, 246, 255};
 Color CUSTOM_WHITE = {248, 250, 252, 255};
 Color CUSTOM_MUTED = {148, 163, 184, 255};
-Color CUSTOM_GREEN = {16, 185, 129, 255}; 
-Color CUSTOM_RED = {239, 68, 68, 255};    
-Color CUSTOM_HOVER = {37, 99, 235, 255};  
-Color CUSTOM_ROW_ALT = {35, 48, 68, 255}; 
+Color CUSTOM_GREEN = {16, 185, 129, 255};
+Color CUSTOM_RED = {239, 68, 68, 255};
+Color CUSTOM_HOVER = {37, 99, 235, 255};
+Color CUSTOM_ROW_ALT = {35, 48, 68, 255};
 
 // Load data from file
 void LoadData(void)
@@ -110,7 +110,7 @@ void DrawInput(Rectangle rect, const char *label, const char *value, int field)
     DrawText(label, rect.x, rect.y - 22, 15, CUSTOM_MUTED);
     DrawRectangleRounded(rect, 0.15f, 8, CUSTOM_PANEL);
     DrawRectangleLinesEx(rect, 2, focusedField == field ? CUSTOM_BLUE : (Color){71, 85, 105, 255});
-    
+
     if (strlen(value) > 0) {
         DrawText(value, rect.x + 14, rect.y + 12, 17, CUSTOM_WHITE);
     } else {
@@ -314,7 +314,7 @@ void DrawDashboard(void)
     float tableY = 250;
     float tableWidth = sw - 80;
     DrawRectangleRounded((Rectangle){40, tableY, tableWidth, 40}, 0.1f, 8, CUSTOM_BLUE);
-    
+
     DrawText("ROLL NO.", 55, tableY + 12, 15, CUSTOM_WHITE);
     DrawText("STUDENT NAME", 200, tableY + 12, 15, CUSTOM_WHITE);
     DrawText("COURSE", tableWidth * 0.55f, tableY + 12, 15, CUSTOM_WHITE);
@@ -352,7 +352,7 @@ void DrawDashboard(void)
         DrawText(students[i].name, 200, rowY + 10, 15, CUSTOM_WHITE);
         DrawText(students[i].course, tableWidth * 0.55f, rowY + 10, 15, CUSTOM_WHITE);
         DrawText(TextFormat("%.2f", students[i].marks), tableWidth * 0.78f, rowY + 10, 15, CUSTOM_WHITE);
-        
+
         Color resColor = students[i].marks >= 40 ? CUSTOM_GREEN : CUSTOM_RED;
         DrawText(students[i].marks >= 40 ? "PASS" : "REVIEW", tableWidth * 0.90f, rowY + 10, 15, resColor);
 
@@ -446,6 +446,13 @@ int main(void)
 
     while (!WindowShouldClose())
     {
+        // Use the portable raylib Delete key constant; KEY_KP_DELETE is not
+        // available in every raylib target (including the web build).
+        if (currentScreen == LIST && IsKeyPressed(KEY_DELETE))
+        {
+            DeleteStudent();
+        }
+
         BeginDrawing();
         ClearBackground(CUSTOM_BG);
 
