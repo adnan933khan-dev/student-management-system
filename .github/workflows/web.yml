@@ -32,7 +32,8 @@ jobs:
             -Os -Wall -Ibuild/raylib/src \
             -s USE_GLFW=3 -s WASM=1 \
             --shell-file build/raylib/src/minshell.html \
-            -s ALLOW_MEMORY_GROWTH=1
+            -s ALLOW_MEMORY_GROWTH=1 \
+            -s ASYNCIFY=1
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
