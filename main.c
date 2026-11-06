@@ -17,6 +17,7 @@ Student students[MAX_STUDENTS];
 int studentCount = 0;
 int selectedIndex = -1;
 int scrollOffset = 0;
+int showDeleteDialog = 0;
 
 typedef enum {
     LIST,
@@ -100,6 +101,17 @@ static int IsValidMarksString(const char *text)
     if (*end != '\0') return 0;
 
     return value >= 0.0 && value <= 100.0;
+}
+
+void OpenDeleteDialog(void)
+{
+    if (selectedIndex < 0 || selectedIndex >= studentCount) return;
+    showDeleteDialog = 1;
+}
+
+void CloseDeleteDialog(void)
+{
+    showDeleteDialog = 0;
 }
 
 // Load student records
@@ -228,6 +240,7 @@ void OpenAddForm(void)
     editMode = 0;
     focusedField = 0;
     currentScreen = FORM;
+    CloseDeleteDialog();
 }
 
 // Open edit form
@@ -245,6 +258,7 @@ void OpenEditForm(void)
     editMode = 1;
     focusedField = 0;
     currentScreen = FORM;
+    CloseDeleteDialog();
 }
 
 // Save form data
@@ -338,6 +352,7 @@ void DeleteStudent(void)
     scrollOffset = 0;
     SaveData();
     strcpy(statusMessage, "Student deleted successfully!");
+    CloseDeleteDialog();
 }
 
 // Search matching students
@@ -354,6 +369,45 @@ int MatchesSearch(Student s)
     CopyLowercase(searchText, search, sizeof(search));
 
     return strstr(name, search) != NULL || strstr(roll, search) != NULL;
+}
+
+void DrawDeleteDialog(void)
+{
+    int sw = GetScreenWidth();
+    int sh = GetScreenHeight();
+
+    DrawRectangle(0, 0, sw, sh, (Color){0, 0, 0, 150});
+
+    float modalWidth = 420;
+    float modalHeight = 180;
+    float modalX = (sw - modalWidth) / 2;
+    float modalY = (sh - modalHeight) / 2;
+
+    DrawRectangleRounded((Rectangle){modalX, modalY, modalWidth, modalHeight}, 0.12f, 12, CUSTOM_PANEL);
+    DrawRectangleLinesEx((Rectangle){modalX, modalY, modalWidth, modalHeight}, 2, CUSTOM_RED);
+
+    DrawText("Delete Student?", modalX + 25, modalY + 25, 24, CUSTOM_WHITE);
+
+    const char *nameText = (selectedIndex >= 0 && selectedIndex < studentCount) ? students[selectedIndex].name : "this student";
+    const char *rollText = (selectedIndex >= 0 && selectedIndex < studentCount) ? students[selectedIndex].roll : "";
+
+    DrawText(TextFormat("You are about to delete %s", nameText), modalX + 25, modalY + 68, 17, CUSTOM_MUTED);
+    DrawText(TextFormat("Roll No: %s", rollText), modalX + 25, modalY + 95, 17, CUSTOM_BLUE);
+    DrawText("This action cannot be undone.", modalX + 25, modalY + 120, 15, CUSTOM_MUTED);
+
+    float btnWidth = 150;
+    float gap = 20;
+    float btnY = modalY + modalHeight - 48;
+
+    if (DrawButton((Rectangle){modalX + 25, btnY, btnWidth, 40}, "Cancel", CUSTOM_PANEL))
+    {
+        CloseDeleteDialog();
+    }
+
+    if (DrawButton((Rectangle){modalX + modalWidth - btnWidth - 25, btnY, btnWidth, 40}, "Delete", CUSTOM_RED))
+    {
+        DeleteStudent();
+    }
 }
 
 // Draw Responsive Dashboard
@@ -383,7 +437,7 @@ void DrawDashboard(void)
     float btnY = 190;
     if (DrawButton((Rectangle){40, btnY, 130, 40}, "+ Add Student", CUSTOM_BLUE)) OpenAddForm();
     if (DrawButton((Rectangle){180, btnY, 95, 40}, "Edit", CUSTOM_GREEN)) OpenEditForm();
-    if (DrawButton((Rectangle){285, btnY, 95, 40}, "Delete", CUSTOM_RED)) DeleteStudent();
+    if (DrawButton((Rectangle){285, btnY, 95, 40}, "Delete", CUSTOM_RED)) OpenDeleteDialog();
 
     // Search Box (Responsive right aligned)
     float searchWidth = 280;
@@ -468,6 +522,11 @@ void DrawDashboard(void)
     int statusX = sw - statusWidth - 40;
     if (statusX < 40) statusX = 40;
     DrawText(statusMessage, statusX, sh - 35, 14, CUSTOM_GREEN);
+
+    if (showDeleteDialog)
+    {
+        DrawDeleteDialog();
+    }
 }
 
 // Draw Modern Centered Form Screen
@@ -541,6 +600,42 @@ int main(void)
 
     while (!WindowShouldClose())
     {
+        if (currentScreen == LIST)
+        {
+            if (IsKeyPressed(KEY_DELETE) || IsKeyPressed(KEY_KP_DELETE))
+            {
+                OpenDeleteDialog();
+            }
+
+            if (IsKeyPressed(KEY_TAB) && selectedIndex >= 0)
+            {
+                if (selectedIndex + 1 < studentCount)
+                {
+                    selectedIndex++;
+                }
+                else
+                {
+                    selectedIndex = 0;
+                }
+            }
+        }
+        else if (currentScreen == FORM)
+        {
+            if (IsKeyPressed(KEY_TAB))
+            {
+                focusedField = (focusedField + 1) % 4;
+            }
+            if (IsKeyPressed(KEY_ENTER))
+            {
+                SaveForm();
+            }
+            if (IsKeyPressed(KEY_ESCAPE))
+            {
+                currentScreen = LIST;
+                focusedField = -1;
+            }
+        }
+
         BeginDrawing();
         ClearBackground(CUSTOM_BG);
 
