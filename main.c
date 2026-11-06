@@ -40,12 +40,67 @@ char formErrorMessage[100] = "";
 Color CUSTOM_BG = {15, 23, 42, 255};      // Deep Slate Dark
 Color CUSTOM_PANEL = {30, 41, 59, 255};   // Card Surface
 Color CUSTOM_BLUE = {59, 130, 246, 255};  // Vibrant Blue
-Color CUSTOM_WHITE = {248, 250, 252, 255);// Crisp White
-Color CUSTOM_MUTED = {148, 163, 184, 255};// Soft Gray
+Color CUSTOM_WHITE = {248, 250, 252, 255}; // Crisp White
+Color CUSTOM_MUTED = {148, 163, 184, 255}; // Soft Gray
 Color CUSTOM_GREEN = {16, 185, 129, 255}; // Emerald Green
 Color CUSTOM_RED = {239, 68, 68, 255};    // Modern Red
 Color CUSTOM_HOVER = {37, 99, 235, 255};  // Button Hover Blue
 Color CUSTOM_ROW_ALT = {35, 48, 68, 255}; // Table row alternate/select
+
+static void TrimInPlace(char *str)
+{
+    if (str == NULL) return;
+
+    size_t len = strlen(str);
+    while (len > 0 && isspace((unsigned char)str[len - 1]))
+    {
+        str[--len] = '\0';
+    }
+
+    char *start = str;
+    while (*start != '\0' && isspace((unsigned char)*start))
+    {
+        start++;
+    }
+
+    if (start != str)
+    {
+        memmove(str, start, strlen(start) + 1);
+    }
+}
+
+static void CopyLowercase(const char *src, char *dst, size_t dstSize)
+{
+    if (src == NULL || dst == NULL || dstSize == 0) return;
+
+    size_t i = 0;
+    while (src[i] != '\0' && i < dstSize - 1)
+    {
+        dst[i] = (char)tolower((unsigned char)src[i]);
+        i++;
+    }
+    dst[i] = '\0';
+}
+
+static int IsValidMarksString(const char *text)
+{
+    if (text == NULL || text[0] == '\0') return 0;
+
+    char temp[32];
+    strncpy(temp, text, sizeof(temp) - 1);
+    temp[sizeof(temp) - 1] = '\0';
+    TrimInPlace(temp);
+
+    if (temp[0] == '\0') return 0;
+
+    char *end = NULL;
+    double value = strtod(temp, &end);
+    if (end == temp) return 0;
+    while (*end != '\0' && isspace((unsigned char)*end)) end++;
+    if (*end != '\0') return 0;
+
+    return value >= 0.0 && value <= 100.0;
+}
 
 // Load student records
 void LoadData(void)
@@ -53,12 +108,13 @@ void LoadData(void)
     FILE *file = fopen("students.txt", "r");
     if (file == NULL) return;
 
+    studentCount = 0;
     while (studentCount < MAX_STUDENTS &&
-        fscanf(file, " %19[^|]|%59[^|]|%39[^|]|%f",
-        students[studentCount].roll,
-        students[studentCount].name,
-        students[studentCount].course,
-        &students[studentCount].marks) == 4)
+           fscanf(file, " %19[^|]|%59[^|]|%39[^|]|%f",
+                  students[studentCount].roll,
+                  students[studentCount].name,
+                  students[studentCount].course,
+                  &students[studentCount].marks) == 4)
     {
         studentCount++;
     }
@@ -78,10 +134,10 @@ void SaveData(void)
     for (int i = 0; i < studentCount; i++)
     {
         fprintf(file, "%s|%s|%s|%.2f\n",
-            students[i].roll,
-            students[i].name,
-            students[i].course,
-            students[i].marks);
+                students[i].roll,
+                students[i].name,
+                students[i].course,
+                students[i].marks);
     }
     fclose(file);
 }
@@ -97,9 +153,9 @@ int DrawButton(Rectangle rect, const char *text, Color color)
     int fontSize = 16;
     int textWidth = MeasureText(text, fontSize);
     DrawText(text,
-        rect.x + (rect.width - textWidth) / 2,
-        rect.y + (rect.height - fontSize) / 2,
-        fontSize, CUSTOM_WHITE);
+             rect.x + (rect.width - textWidth) / 2,
+             rect.y + (rect.height - fontSize) / 2,
+             fontSize, CUSTOM_WHITE);
 
     return hover && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
 }
@@ -110,11 +166,13 @@ void DrawInput(Rectangle rect, const char *label, const char *value, int field)
     DrawText(label, rect.x, rect.y - 22, 15, CUSTOM_MUTED);
     DrawRectangleRounded(rect, 0.15f, 8, CUSTOM_PANEL);
     DrawRectangleLinesEx(rect, 2, focusedField == field ? CUSTOM_BLUE : (Color){71, 85, 105, 255});
-    
-    // Draw text inside input or placeholder
-    if (strlen(value) > 0) {
+
+    if (strlen(value) > 0)
+    {
         DrawText(value, rect.x + 14, rect.y + 12, 17, CUSTOM_WHITE);
-    } else {
+    }
+    else
+    {
         DrawText("Type here...", rect.x + 14, rect.y + 12, 17, (Color){100, 116, 139, 255});
     }
 }
@@ -128,12 +186,12 @@ void HandleInput(char *buffer, int maxLength, int numberOnly)
         int valid = 0;
         if (numberOnly)
         {
-            valid = (key >= '0' && key <= '9') ||
-                    (key == '.' && strchr(buffer, '.') == NULL);
+            valid = ((key >= '0' && key <= '9') ||
+                    (key == '.' && strchr(buffer, '.') == NULL));
         }
         else
         {
-            valid = key >= 32 && key <= 125 && key != '|';
+            valid = (key >= 32 && key <= 125 && key != '|');
         }
 
         int len = strlen(buffer);
@@ -152,14 +210,19 @@ void HandleInput(char *buffer, int maxLength, int numberOnly)
     }
 }
 
+void ResetFormFields(void)
+{
+    formRoll[0] = '\0';
+    formName[0] = '\0';
+    formCourse[0] = '\0';
+    formMarks[0] = '\0';
+    formErrorMessage[0] = '\0';
+}
+
 // Open add form
 void OpenAddForm(void)
 {
-    strcpy(formRoll, "");
-    strcpy(formName, "");
-    strcpy(formCourse, "");
-    strcpy(formMarks, "");
-    strcpy(formErrorMessage, "");
+    ResetFormFields();
 
     selectedIndex = -1;
     editMode = 0;
@@ -173,11 +236,10 @@ void OpenEditForm(void)
     if (selectedIndex < 0) return;
 
     Student s = students[selectedIndex];
-    strcpy(formRoll, s.roll);
-    strcpy(formName, s.name);
-    strcpy(formCourse, s.course);
-    strcpy(formErrorMessage, "");
-
+    snprintf(formRoll, sizeof(formRoll), "%s", s.roll);
+    snprintf(formName, sizeof(formName), "%s", s.name);
+    snprintf(formCourse, sizeof(formCourse), "%s", s.course);
+    formErrorMessage[0] = '\0';
     snprintf(formMarks, sizeof(formMarks), "%.2f", s.marks);
 
     editMode = 1;
@@ -188,25 +250,40 @@ void OpenEditForm(void)
 // Save form data
 void SaveForm(void)
 {
-    strcpy(formErrorMessage, "");
+    char roll[sizeof(formRoll)];
+    char name[sizeof(formName)];
+    char course[sizeof(formCourse)];
+    char marks[sizeof(formMarks)];
 
-    if (strlen(formRoll) == 0 || strlen(formName) == 0 ||
-        strlen(formCourse) == 0 || strlen(formMarks) == 0)
+    strcpy(roll, formRoll);
+    strcpy(name, formName);
+    strcpy(course, formCourse);
+    strcpy(marks, formMarks);
+
+    TrimInPlace(roll);
+    TrimInPlace(name);
+    TrimInPlace(course);
+    TrimInPlace(marks);
+
+    formErrorMessage[0] = '\0';
+
+    if (roll[0] == '\0' || name[0] == '\0' || course[0] == '\0' || marks[0] == '\0')
     {
         strcpy(formErrorMessage, "Please fill all fields!");
         return;
     }
 
-    float marks = strtof(formMarks, NULL);
-    if (marks < 0 || marks > 100)
+    if (!IsValidMarksString(marks))
     {
         strcpy(formErrorMessage, "Marks must be between 0 and 100!");
         return;
     }
 
+    float marksValue = strtof(marks, NULL);
+
     for (int i = 0; i < studentCount; i++)
     {
-        if (strcmp(students[i].roll, formRoll) == 0)
+        if (strcmp(students[i].roll, roll) == 0)
         {
             if (!editMode || i != selectedIndex)
             {
@@ -225,10 +302,10 @@ void SaveForm(void)
     int index = editMode ? selectedIndex : studentCount;
     if (index < 0 || index >= MAX_STUDENTS) return;
 
-    strcpy(students[index].roll, formRoll);
-    strcpy(students[index].name, formName);
-    strcpy(students[index].course, formCourse);
-    students[index].marks = marks;
+    strcpy(students[index].roll, roll);
+    strcpy(students[index].name, name);
+    strcpy(students[index].course, course);
+    students[index].marks = marksValue;
 
     if (!editMode) studentCount++;
 
@@ -236,8 +313,14 @@ void SaveForm(void)
     selectedIndex = index;
     currentScreen = LIST;
     focusedField = -1;
+    scrollOffset = 0;
 
     strcpy(statusMessage, editMode ? "Student updated successfully!" : "Student added successfully!");
+
+    strcpy(formRoll, roll);
+    strcpy(formName, name);
+    strcpy(formCourse, course);
+    strcpy(formMarks, marks);
 }
 
 // Delete selected student
@@ -252,6 +335,7 @@ void DeleteStudent(void)
 
     studentCount--;
     selectedIndex = -1;
+    scrollOffset = 0;
     SaveData();
     strcpy(statusMessage, "Student deleted successfully!");
 }
@@ -261,14 +345,13 @@ int MatchesSearch(Student s)
 {
     if (strlen(searchText) == 0) return 1;
 
-    char name[60], roll[20], search[60];
-    strcpy(name, s.name);
-    strcpy(roll, s.roll);
-    strcpy(search, searchText);
+    char name[60];
+    char roll[20];
+    char search[60];
 
-    for (int i = 0; name[i]; i++) name[i] = (char)tolower((unsigned char)name[i]);
-    for (int i = 0; roll[i]; i++) roll[i] = (char)tolower((unsigned char)roll[i]);
-    for (int i = 0; search[i]; i++) search[i] = (char)tolower((unsigned char)search[i]);
+    CopyLowercase(s.name, name, sizeof(name));
+    CopyLowercase(s.roll, roll, sizeof(roll));
+    CopyLowercase(searchText, search, sizeof(search));
 
     return strstr(name, search) != NULL || strstr(roll, search) != NULL;
 }
@@ -321,7 +404,7 @@ void DrawDashboard(void)
     float tableY = 250;
     float tableWidth = sw - 80;
     DrawRectangleRounded((Rectangle){40, tableY, tableWidth, 40}, 0.1f, 8, CUSTOM_BLUE);
-    
+
     DrawText("ROLL NO.", 55, tableY + 12, 15, CUSTOM_WHITE);
     DrawText("STUDENT NAME", 200, tableY + 12, 15, CUSTOM_WHITE);
     DrawText("COURSE", tableWidth * 0.55f, tableY + 12, 15, CUSTOM_WHITE);
@@ -353,13 +436,13 @@ void DrawDashboard(void)
         Rectangle rowRect = {40, rowY, tableWidth, 38};
 
         DrawRectangleRounded(rowRect, 0.1f, 8,
-            selectedIndex == i ? CUSTOM_ROW_ALT : CUSTOM_PANEL);
+                             selectedIndex == i ? CUSTOM_ROW_ALT : CUSTOM_PANEL);
 
         DrawText(students[i].roll, 55, rowY + 10, 15, CUSTOM_WHITE);
         DrawText(students[i].name, 200, rowY + 10, 15, CUSTOM_WHITE);
         DrawText(students[i].course, tableWidth * 0.55f, rowY + 10, 15, CUSTOM_WHITE);
         DrawText(TextFormat("%.2f", students[i].marks), tableWidth * 0.78f, rowY + 10, 15, CUSTOM_WHITE);
-        
+
         Color resColor = students[i].marks >= 40 ? CUSTOM_GREEN : CUSTOM_RED;
         DrawText(students[i].marks >= 40 ? "PASS" : "REVIEW", tableWidth * 0.90f, rowY + 10, 15, resColor);
 
@@ -380,7 +463,11 @@ void DrawDashboard(void)
 
     // Footer Info
     DrawText(TextFormat("Showing %d of %d students", total, studentCount), 40, sh - 35, 14, CUSTOM_MUTED);
-    DrawText(statusMessage, sw - MeasureText(statusMessage, 14) - 40, sh - 35, 14, CUSTOM_GREEN);
+
+    int statusWidth = MeasureText(statusMessage, 14);
+    int statusX = sw - statusWidth - 40;
+    if (statusX < 40) statusX = 40;
+    DrawText(statusMessage, statusX, sh - 35, 14, CUSTOM_GREEN);
 }
 
 // Draw Modern Centered Form Screen
